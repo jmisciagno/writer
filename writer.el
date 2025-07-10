@@ -31,7 +31,7 @@
                              (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
   (org-bullets-mode 1)
   (org-variable-pitch-minor-mode)
-  (text-scale-set 1)
+  (text-scale-set 1.5)
   (let* ((variable-tuple (cond ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
                                ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
                                ((x-list-fonts "Verdana")         '(:font "Verdana"))
@@ -60,10 +60,12 @@
   (org-indent-mode -1)
   (remove-hook 'org-mode-hook #'writer-setup)
   (org-bullets-mode -1)
+  (org-variable-pitch-minor-mode -1)
+  (text-scale-set 0)
   (font-lock-remove-keywords 'org-mode
                           '(("^ *\\([-]\\) "
                              (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-  (text-scale-set 0)
+  (text-scale-set 1)
   (custom-theme-set-faces 'user
                           `(org-level-8 ((t :inherit outline-8)))
                           `(org-level-7 ((t :inherit outline-7)))
@@ -76,7 +78,7 @@
                           `(org-document-title ((((class color) (background light)) (:foreground "midnight blue" :weight bold))
     (((class color) (background dark)) (:foreground "pale turquoise" :weight bold)))
     (t (:weight bold))))
-  (org-mode))
+)
 
 (defun writer-on ()
   (interactive)
