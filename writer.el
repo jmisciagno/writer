@@ -24,6 +24,7 @@
 (require 'org-variable-pitch)
 
 (defun writer-setup ()
+  (visual-line-mode 1)
   (setq org-hide-emphasis-markers t)
   (org-indent-mode 1)
   (font-lock-add-keywords 'org-mode
@@ -56,6 +57,7 @@
 (defun writer-off ()
   (interactive)
   (setq writer-p nil)
+  (visual-line-mode 1)
   (setq org-hide-emphasis-markers nil)
   (org-indent-mode -1)
   (remove-hook 'org-mode-hook #'writer-setup)
@@ -88,7 +90,5 @@
 (defun writer-toggle ()
   (interactive)
   (if writer-p (writer-off) (writer-on)))
-
-
 
 (provide 'writer)
