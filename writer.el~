@@ -76,8 +76,9 @@
                           `(org-level-2 ((t :inherit outline-2)))
                           `(org-level-1 ((t :inherit outline-1)))
                           `(org-document-title ((((class color) (background light)) (:foreground "midnight blue" :weight bold))
-    (((class color) (background dark)) (:foreground "pale turquoise" :weight bold))) (t (:weight bold))))
-  (org-mode))
+    (((class color) (background dark)) (:foreground "pale turquoise" :weight bold)))
+    (t (:weight bold))))
+)
 
 (defun writer-on ()
   (interactive)
