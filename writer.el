@@ -23,8 +23,7 @@
 (require 'org-bullets)
 (require 'org-variable-pitch)
 
-(defun writer-setup ()
-  (visual-line-mode 1)
+(defun writer-mode-on ()
   (setq org-hide-emphasis-markers t)
   (org-indent-mode 1)
   (font-lock-add-keywords 'org-mode
@@ -32,7 +31,6 @@
                              (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
   (org-bullets-mode 1)
   (org-variable-pitch-minor-mode)
-  (text-scale-set 1.5)
   (let* ((variable-tuple (cond ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
                                ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
                                ((x-list-fonts "Verdana")         '(:font "Verdana"))
@@ -52,22 +50,17 @@
                             `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
                             `(org-document-title ((t (,@headline ,@variable-tuple :height 1.5 :underline nil)))))))
 
-(setq writer-p nil)
 
-(defun writer-off ()
-  (interactive)
+(defun writer-mode-off ()
   (setq writer-p nil)
-  (visual-line-mode 1)
   (setq org-hide-emphasis-markers nil)
   (org-indent-mode -1)
   (remove-hook 'org-mode-hook #'writer-setup)
   (org-bullets-mode -1)
   (org-variable-pitch-minor-mode -1)
-  (text-scale-set 0)
   (font-lock-remove-keywords 'org-mode
                           '(("^ *\\([-]\\) "
                              (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-  (text-scale-set 1)
   (custom-theme-set-faces 'user
                           `(org-level-8 ((t :inherit outline-8)))
                           `(org-level-7 ((t :inherit outline-7)))
@@ -81,14 +74,55 @@
     (((class color) (background dark)) (:foreground "pale turquoise" :weight bold))) (t (:weight bold))))
   (org-mode))
 
-(defun writer-on ()
-  (interactive)
-  (setq writer-p t)
-  (add-hook 'org-mode-hook #'writer-setup)
-  (org-mode))
+;;; There are three minor modes enabled and showing in the mode line
+;; - buffer-face-mode " BufFace"
+;; - org-indent-mode " Ind"
+;; - org-variable-pitch-minor-mode " OVP"
+;; I need to get rid of these
 
-(defun writer-toggle ()
-  (interactive)
-  (if writer-p (writer-off) (writer-on)))
+
+(define-minor-mode writer-mode
+  "Language mode documentation."
+  :lighter " Writer")
+
+(defun writer-mode-toggle ()
+  (if (derived-mode-p 'org-mode)
+      (if writer-mode (writer-mode-on) (writer-mode-off))
+      (progn (princ "Failed to launch Writer mode.  Org mode must be active.")
+	     (ding))))
+
+(add-hook 'writer-mode-hook #'writer-mode-toggle) ; start or clean up
+
+;; Clean up mode-line
+(defun set-mode-line (m s)
+  (let ((res (assq m minor-mode-alist)))
+    (when res (setcar (cdr res) s))))
+
+(defun remove-from-mode-line (m m0 s)
+  (lambda (&rest args)
+    (if (bound-and-true-p m)
+	(set-mode-line m0 "")
+        (set-mode-line m0 s))))
+
+;; Remove minor mode dependencies from modeline
+;; (advice-add 'buffer-face-mode :before (remove-from-mode-line writer-mode 'buffer-face-mode " BufFace"))
+;; (advice-add 'org-indent-mode :before (remove-from-mode-line writer-mode 'org-indent-mode " Ind"))
+;; (advice-add 'org-variable-pitch-minor-mode :before (remove-from-mode-line writer-mode 'org-variable-pitch-minor-mode " OVP"))
+
+(defun set-mode-line (m s)
+  (let ((res (assq m minor-mode-alist)))
+    (when res (setcar (cdr res) s))))
+
+(defmacro remove-from-mode-line (child-mode parent-mode str)
+  `(advice-add ,parent-mode  ; hide BufFace in modeline
+	    :before
+	    (lambda (&rest args)
+	      (if (bound-and-true-p ,child-mode)
+		  (set-mode-line ,parent-mode "") ; no Mode Line display for word wrap
+		  (set-mode-line ,parent-mode (concat " " ,str)))))) ; restore modeline
+
+(remove-from-mode-line writer-mode 'buffer-face-mode "BufFace")
+(remove-from-mode-line writer-mode 'org-indent-mode "Ind")
+(remove-from-mode-line writer-mode 'org-variable-pitch-minor-mode "OVP")
 
 (provide 'writer)
