@@ -22,8 +22,10 @@
 
 (require 'org-bullets)
 (require 'org-variable-pitch)
+(setq org-bullets-bullet-list (list "" "" "" ""))
 
 (defun writer-mode-on ()
+  (setq mode-line-format nil)
   (setq org-hide-emphasis-markers t)
   (org-indent-mode 1)
   (font-lock-add-keywords 'org-mode
@@ -38,7 +40,6 @@
                                (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
 	 (base-font-color     (face-foreground 'default nil 'default))
 	 (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
-    
     (custom-theme-set-faces 'user
                             `(org-level-8 ((t (,@headline ,@variable-tuple))))
                             `(org-level-7 ((t (,@headline ,@variable-tuple))))
@@ -48,11 +49,12 @@
                             `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.25))))
                             `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.35))))
                             `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
-                            `(org-document-title ((t (,@headline ,@variable-tuple :height 1.5 :underline nil)))))))
+                            `(org-document-title ((t (,@headline ,@variable-tuple :height 1.5 :underline nil)))))
+    ))
 
 
 (defun writer-mode-off ()
-  (setq writer-p nil)
+  (setq mode-line-format t)
   (setq org-hide-emphasis-markers nil)
   (org-indent-mode -1)
   (remove-hook 'org-mode-hook #'writer-setup)
@@ -80,6 +82,35 @@
 ;; - org-variable-pitch-minor-mode " OVP"
 ;; I need to get rid of these
 
+
+(defun copy-as-rtf ()
+  "Export region to RTF and copy it to the clipboard."
+  (interactive)
+  (save-window-excursion
+    (let* ((toc org-export-with-toc)
+	   (with-section-numbers org-export-with-section-numbers)
+	   (buf (progn
+		  (setq org-export-with-toc nil) ; Preserve export settings
+		  (setq org-export-with-section-numbers nil) ; Preserve export settings
+		  (org-export-to-buffer 'html "Formatted Copy" nil nil t t)))
+	   (html (progn
+		   (setq org-export-with-toc toc)
+		   (setq org-export-with-section-numbers with-section-number)
+		   (with-current-buffer buf (buffer-string)))))
+      (with-current-buffer buf
+        (shell-command-on-region
+         (point-min)
+         (point-max)
+         "textutil -stdin -format html -convert rtf -stdout | pbcopy"))
+      (kill-buffer buf)
+      (deactivate-mark))))
+
+(defvar writer-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map org-mode-map) ; set parent
+    (define-key map (kbd "s-c") #'copy-as-rtf)
+    map)
+  "Keymap for my extended minor mode.")
 
 (define-minor-mode writer-mode
   "Language mode documentation."
