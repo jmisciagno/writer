@@ -24,8 +24,8 @@
 (require 'org-variable-pitch)
 (setq org-bullets-bullet-list (list "○" "" "" "")) ; Eliminate all Bullet points except for the first.
 
-(defun writer-mode-on (reset)
-  (setq mode-line-format nil)
+(defun writer-mode-on ()
+  ; (setq mode-line-format nil)
   (setq org-hide-emphasis-markers t)
   (org-indent-mode 1)
   (org-variable-pitch-minor-mode 1)
@@ -41,16 +41,16 @@
     (face-remap-add-relative 'org-level-1 `(:weight bold :foreground ,base-font-color :height 1.5))
     (face-remap-add-relative 'org-document-title `(:weight bold :foreground ,base-font-color :height 1.75 :underline nil)))
   (org-bullets-mode 1) ; must be last
-  (when reset (org-mode)))
+  )
 
-(defun writer-mode-off (reset)
-  (setq mode-line-format t)
+(defun writer-mode-off ()
+  ; (setq mode-line-format t)
   (setq org-hide-emphasis-markers nil)
   (org-indent-mode -1)
   (org-variable-pitch-minor-mode -1)
   (font-lock-remove-keywords nil '(("^ *\\([-]\\) " (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
   (org-bullets-mode -1) ; must be last
-  (when reset (org-mode)))
+  (org-mode))
 
 (defun copy-as-rtf ()
   "Export region to RTF and copy it to the clipboard."
@@ -81,16 +81,16 @@
     map))
 
 (define-minor-mode writer-mode
+  "Writer mode documentation."
   :lighter " Writer")
 
 ; Manage State
 (defun writer-mode-toggle ()
   (if (derived-mode-p 'org-mode)
-      (if writer-mode (writer-mode-on nil) (writer-mode-off t))
+      (if writer-mode (writer-mode-on) (writer-mode-off))
       (progn (princ "Failed to launch Writer mode.  Org mode must be active.")
 	     (ding))))
 
-(add-hook 'org-mode-hook (lambda () (if writer-mode (writer-mode-on t) (writer-mode-off nil))))
 (add-hook 'writer-mode-hook #'writer-mode-toggle) ; start or clean up
 
 ;; Remove minor mode dependencies from modeline
